@@ -46,4 +46,13 @@ Use the dashboard buttons to:
 - Clear the current fault
 - Export a CSV maintenance report from the dashboard header
 
+## Deploy to Render
+
+1. Push the repo to GitHub.
+2. In Render, choose **New +** -> **Blueprint**.
+3. Connect this repo and deploy using the included `render.yaml`.
+4. Render will install dependencies and start the app automatically.
+
+> Note: `smartmonitor.db` is SQLite on the service filesystem, so demo data resets if the Render instance is rebuilt or restarted.
+
 The app writes logs into `smartmonitor.db` automatically.
