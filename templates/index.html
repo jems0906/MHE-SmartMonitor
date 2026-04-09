@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MHE SmartMonitor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+    <header class="topbar">
+        <div>
+            <p class="eyebrow">Material Handling Equipment Monitoring</p>
+            <h1>MHE SmartMonitor</h1>
+            <p class="subtitle">Real-Time Conveyor Diagnostics & Fault Detection</p>
+        </div>
+        <div class="topbar-meta">
+            <div class="badge" id="healthBadge">HEALTHY</div>
+            <p>Last Update: <span id="lastUpdate">--</span></p>
+            <button class="secondary" onclick="downloadReport()">Export CSV Report</button>
+        </div>
+    </header>
+
+    <main class="dashboard">
+        <section class="hero-banner">
+            <div>
+                <p class="eyebrow">SCADA-Style Operations View</p>
+                <h2>Monitor conveyor health, respond to alarms, and visualize live performance in one polished control room dashboard.</h2>
+                <p class="hero-copy">Designed to feel like a modern material-handling monitoring console with real-time telemetry, fault insight, and maintenance visibility.</p>
+            </div>
+            <div class="hero-tags">
+                <span>Live Telemetry</span>
+                <span>PLC Signals</span>
+                <span>Alarm Tracking</span>
+                <span>Maintenance Reports</span>
+            </div>
+        </section>
+
+        <section class="card-grid">
+            <article class="metric-card">
+                <h2>Motor Status</h2>
+                <p class="metric-value" id="motorStatus">--</p>
+            </article>
+            <article class="metric-card">
+                <h2>Throughput Rate</h2>
+                <p class="metric-value" id="throughputRate">0 u/min</p>
+            </article>
+            <article class="metric-card">
+                <h2>Conveyor Speed</h2>
+                <p class="metric-value" id="speedValue">0 m/min</p>
+            </article>
+            <article class="metric-card">
+                <h2>PLC Mode</h2>
+                <p class="metric-value" id="plcMode">--</p>
+            </article>
+            <article class="metric-card">
+                <h2>Motor Current</h2>
+                <p class="metric-value" id="currentValue">0 A</p>
+            </article>
+            <article class="metric-card">
+                <h2>Temperature</h2>
+                <p class="metric-value" id="temperatureValue">0 °C</p>
+            </article>
+            <article class="metric-card">
+                <h2>Load</h2>
+                <p class="metric-value" id="loadValue">0%</p>
+                <div class="progress"><span id="loadBar"></span></div>
+            </article>
+            <article class="metric-card">
+                <h2>Total Units</h2>
+                <p class="metric-value" id="unitsValue">0</p>
+            </article>
+        </section>
+
+        <section class="panel controls-panel">
+            <div>
+                <h2>Operator Controls</h2>
+                <p>Simulate runtime behavior and fault conditions.</p>
+            </div>
+            <div class="button-row">
+                <button onclick="sendControl('start')">Start</button>
+                <button onclick="sendControl('stop')">Stop</button>
+                <button class="secondary" onclick="sendControl('ack')">Acknowledge Alarm</button>
+                <button onclick="sendControl('clear')">Clear Fault</button>
+                <button class="warn" onclick="sendControl('slowdown')">Slowdown</button>
+                <button class="danger" onclick="sendControl('jam')">Jam</button>
+                <button class="danger" onclick="sendControl('overload')">Overload</button>
+                <button class="danger" onclick="sendControl('estop')">E-Stop</button>
+            </div>
+        </section>
+
+        <section class="two-column">
+            <article class="panel">
+                <h2>Maintenance KPI Summary</h2>
+                <div class="summary-grid">
+                    <div><span>Samples</span><strong id="samplesValue">0</strong></div>
+                    <div><span>Availability</span><strong id="availabilityValue">0%</strong></div>
+                    <div><span>Avg Throughput</span><strong id="avgThroughputValue">0</strong></div>
+                    <div><span>Critical Events</span><strong id="criticalEventsValue">0</strong></div>
+                    <div><span>Peak Temp</span><strong id="peakTempValue">0 °C</strong></div>
+                    <div><span>Dominant Fault</span><strong id="dominantFaultValue">NORMAL</strong></div>
+                </div>
+            </article>
+
+            <article class="panel">
+                <h2>PLC I/O Snapshot</h2>
+                <div class="summary-grid io-grid">
+                    <div><span>Line State</span><strong id="lineState">--</strong></div>
+                    <div><span>Alarm Code</span><strong id="alarmCode">ALM-000</strong></div>
+                    <div><span>Alarm Status</span><strong id="alarmStatus">CLEAR</strong></div>
+                    <div><span>Start Permissive</span><strong class="io-pill" id="startPermissive">--</strong></div>
+                    <div><span>Photoeye</span><strong class="io-pill" id="photoeyeState">--</strong></div>
+                    <div><span>Drive Ready</span><strong class="io-pill" id="driveReady">--</strong></div>
+                    <div><span>Safety Circuit</span><strong class="io-pill" id="safetyCircuit">--</strong></div>
+                </div>
+            </article>
+        </section>
+
+        <section class="two-column">
+            <article class="panel">
+                <h2>Alert Center</h2>
+                <p class="fault-line">Active Fault: <strong id="faultValue">None</strong></p>
+                <p class="recommendation">Recommended Action: <span id="recommendation">--</span></p>
+                <ul class="alerts-list" id="alertsList">
+                    <li>Waiting for live data...</li>
+                </ul>
+            </article>
+
+            <article class="panel">
+                <h2>Fault Counters</h2>
+                <div class="counter-grid">
+                    <div><span>Jam</span><strong id="jamCount">0</strong></div>
+                    <div><span>Slowdown</span><strong id="slowdownCount">0</strong></div>
+                    <div><span>Overload</span><strong id="overloadCount">0</strong></div>
+                    <div><span>E-Stop</span><strong id="stopCount">0</strong></div>
+                </div>
+                <p class="uptime">Uptime: <span id="uptimeValue">0s</span></p>
+            </article>
+        </section>
+
+        <section class="panel">
+            <h2>Throughput Trend</h2>
+            <canvas id="trendCanvas" width="1000" height="240"></canvas>
+        </section>
+
+        <section class="two-column bottom-panels">
+            <article class="panel">
+                <h2>Recent Fault / Alert Events</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Type</th>
+                                <th>Severity</th>
+                                <th>Message</th>
+                            </tr>
+                        </thead>
+                        <tbody id="eventsBody">
+                            <tr><td colspan="4">No events yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+
+            <article class="panel">
+                <h2>Metric History</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Throughput</th>
+                                <th>Speed</th>
+                                <th>Health</th>
+                            </tr>
+                        </thead>
+                        <tbody id="metricsBody">
+                            <tr><td colspan="4">Waiting for history...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
